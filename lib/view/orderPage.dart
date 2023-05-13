@@ -1,3 +1,5 @@
+import 'dart:ffi';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_functions/cloud_functions.dart';
@@ -10,7 +12,7 @@ class OrderPage extends StatefulWidget {
 }
 
 class _OrderPageState extends State<OrderPage> {
-  late Future<List<Product>> productList;
+  late Future<dynamic> productList;
 
   @override
   void initState() {
@@ -18,15 +20,14 @@ class _OrderPageState extends State<OrderPage> {
     productList = getProducts();
   }
 
-  Future<List<Product>> getProducts()  async {
+  Future<dynamic> getProducts()  async {
     try {
-      final result = await FirebaseFunctions.instance.httpsCallable('getAllNear').call(
+      final result =  FirebaseFunctions.instance.httpsCallable('getAllNear').call(
           {
             "coordinates": [0,0]
-          }
-      );
-      print(result.data.products[0]);
-      return result.data.products as List<Product>;
+          });
+
+      return result;
     } on FirebaseFunctionsException catch (error) {
       print(error.code);
       print(error.details);
@@ -42,24 +43,25 @@ class _OrderPageState extends State<OrderPage> {
         appBar: AppBar(
             title: Text("Order")
         ),
-        body: FutureBuilder<List<Product?>>(
+        body: FutureBuilder<dynamic>(
           future: productList,
           builder: (context, snapshot) {
             if(snapshot.hasData){
-              List<Product?> list = snapshot.data!;
-              ListView.builder(
-                  itemCount: items.length,
+              dynamic list = snapshot.data!.data['products'];
+              print(snapshot.data!.data['products'].toString());
+              return ListView.builder(
+                  itemCount: list.length,
                   prototypeItem: Card(
                     child: ListTile(
-                      title: Text(items.first),
-                      subtitle: Text('Dist + Preço'),
+                      title: Text(list.first['name']),
+                      subtitle: Text('${list.first['price']/100}% - ${list.first['minDistance']}m'),
                       leading: Image(image: AssetImage('assets/bbicon.png')),
                     ),
                   ),
                   itemBuilder: (context, index) {
                     return ListTile(
-                        title: Text(items[index]),
-                        subtitle: Text('Dist + Preço'),
+                        title: Text(list[index]['name']),
+                        subtitle: Text('${list[index]['price']/100}% - ${list[index]['minDistance']}m'),
                         leading: Image(image: AssetImage('assets/bbicon.png'))
                     );
                   }
