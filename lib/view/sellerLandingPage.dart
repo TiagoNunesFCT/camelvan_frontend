@@ -23,7 +23,10 @@ double latitude = 0;
 double longitude = 0;
 
 
-
+FlutterMap leMap = FlutterMap(options: MapOptions(
+  center: LatLng(38.66, -9.17),
+  zoom: 13.0,
+), children: [mapService, mapMarkers],);
 
 
 
@@ -90,7 +93,12 @@ class _SellerLandingPageState extends State<SellerLandingPage> {
   late StreamSubscription<Position> positionStream;
 
 
-
+  void redrawMap(){
+    leMap = FlutterMap(options: MapOptions(
+      center: LatLng(38.66, -9.17),
+      zoom: 13.0,
+    ), children: [mapService, mapMarkers],);
+  }
 
   //The State's Initialization
   @override
@@ -151,8 +159,10 @@ class _SellerLandingPageState extends State<SellerLandingPage> {
 
   getLocation() async {
     position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+    print("geoLocation() Method Coordinates");
     print(position.longitude); //Output: 80.24599079
     print(position.latitude); //Output: 29.6593457
+
 
     longitude = position.longitude;
     latitude = position.latitude;
@@ -163,12 +173,14 @@ class _SellerLandingPageState extends State<SellerLandingPage> {
 
    const LocationSettings locationSettings = LocationSettings(
       accuracy: LocationAccuracy.high, //accuracy of the location data
-      distanceFilter: 10, //minimum distance (measured in meters) a
+      distanceFilter: 5, //minimum distance (measured in meters) a
       //device must move horizontally before an update event is generated;
     );
 
-    StreamSubscription<Position> positionStream = Geolocator.getPositionStream(
+     positionStream = Geolocator.getPositionStream(
         locationSettings: locationSettings).listen((Position position) {
+
+      print("positionStream() Method Coordinates");
       print(position.latitude); //Output: 29.6593457
       print(position.longitude); //Output: 80.24599079
 
@@ -199,11 +211,8 @@ class _SellerLandingPageState extends State<SellerLandingPage> {
         ),
         body: Center(
             child: Container(
-                child: Stack(children:[FlutterMap(options: MapOptions(
-                  center: LatLng(38.66, -9.17),
-                  zoom: 13.0,
-                ), children: [mapService, mapMarkers],)/*,Image.asset('assets/bbicon.png', fit: BoxFit.scaleDown)*/,
-                Text("Current Position: Lat: " + latitude.toString() + " Lon: " + longitude.toString())])
+                child: Stack(children:[leMap,
+                    Text("Current Position: Lat: " + latitude.toString() + " Lon: " + longitude.toString())])
             )
         )
     );
