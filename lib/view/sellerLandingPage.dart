@@ -69,7 +69,7 @@ class _SellerLandingPageState extends State<SellerLandingPage> {
                 child: Stack(children:[FlutterMap(options: MapOptions(
                   center: LatLng(38.66, -9.17),
                   zoom: 13.0,
-                ), children: [mapService, MarkerLayer()],)/*,Image.asset('assets/bbicon.png', fit: BoxFit.scaleDown)*/])
+                ), children: [mapService, mapMarkers],)/*,Image.asset('assets/bbicon.png', fit: BoxFit.scaleDown)*/])
             )
         )
     );
