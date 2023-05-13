@@ -59,6 +59,18 @@ MarkerLayer mapMarkers = MarkerLayer(        markers: [
           );},),
         ),
   ),
+  Marker(
+    width: 80.0,
+    height: 80.0,
+    point: LatLng(latitude, longitude),
+    builder: (ctx) =>
+        Container(
+          child: IconButton(icon: Icon(Icons.man_rounded, color:Colors.blue),onPressed: () {                        Navigator.push(
+            ctx,
+            MaterialPageRoute(builder: (context) => SellerMapPage()),
+          );},),
+        ),
+  ),
 ]);
 
 
@@ -71,8 +83,8 @@ class SellerLandingPage extends StatefulWidget {
 
 class _SellerLandingPageState extends State<SellerLandingPage> {
 
-  bool servicestatus = false;
-  bool haspermission = false;
+  bool serviceStatus = false;
+  bool hasPermission = false;
   late LocationPermission permission;
   late Position position;
   late StreamSubscription<Position> positionStream;
@@ -104,8 +116,8 @@ class _SellerLandingPageState extends State<SellerLandingPage> {
 
 
   checkGps() async {
-    servicestatus = await Geolocator.isLocationServiceEnabled();
-    if(servicestatus){
+    serviceStatus = await Geolocator.isLocationServiceEnabled();
+    if(serviceStatus){
       permission = await Geolocator.checkPermission();
 
       if (permission == LocationPermission.denied) {
@@ -115,13 +127,13 @@ class _SellerLandingPageState extends State<SellerLandingPage> {
         }else if(permission == LocationPermission.deniedForever){
           print("'Location permissions are permanently denied");
         }else{
-          haspermission = true;
+          hasPermission = true;
         }
       }else{
-        haspermission = true;
+        hasPermission = true;
       }
 
-      if(haspermission){
+      if(hasPermission){
         setState(() {
           //refresh the UI
         });
@@ -149,7 +161,7 @@ class _SellerLandingPageState extends State<SellerLandingPage> {
       //refresh UI
     });
 
-    LocationSettings locationSettings = LocationSettings(
+   const LocationSettings locationSettings = LocationSettings(
       accuracy: LocationAccuracy.high, //accuracy of the location data
       distanceFilter: 10, //minimum distance (measured in meters) a
       //device must move horizontally before an update event is generated;
@@ -157,8 +169,8 @@ class _SellerLandingPageState extends State<SellerLandingPage> {
 
     StreamSubscription<Position> positionStream = Geolocator.getPositionStream(
         locationSettings: locationSettings).listen((Position position) {
-      print(position.longitude); //Output: 80.24599079
       print(position.latitude); //Output: 29.6593457
+      print(position.longitude); //Output: 80.24599079
 
       longitude = position.longitude;
       latitude = position.latitude;
