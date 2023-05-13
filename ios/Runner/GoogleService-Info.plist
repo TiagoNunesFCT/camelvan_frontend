@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>469179683240-ph65qtt3dl6qk8kf96dj26d59ceui6a6.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.469179683240-ph65qtt3dl6qk8kf96dj26d59ceui6a6</string>
+	<key>API_KEY</key>
+	<string>AIzaSyDJu8XCGohb1dwzGNv4tDVhfK1KUtJvBpc</string>
+	<key>GCM_SENDER_ID</key>
+	<string>469179683240</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.ctrlaltdefeat.camelvanFrontend</string>
+	<key>PROJECT_ID</key>
+	<string>camelvan</string>
+	<key>STORAGE_BUCKET</key>
+	<string>camelvan.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:469179683240:ios:62336dc1801286d7910d9d</string>
+</dict>
+</plist>

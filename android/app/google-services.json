@@ -1,0 +1,82 @@
+{
+  "project_info": {
+    "project_number": "469179683240",
+    "project_id": "camelvan",
+    "storage_bucket": "camelvan.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:469179683240:android:36e1635c77199329910d9d",
+        "android_client_info": {
+          "package_name": "com.ctrlaltdefeat.camelvan_frontend"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "469179683240-rmccdc3qdnpuc5bii1vu0dknum49ejpv.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDEGcE_s0INkhFQIOGowwumELO0kdw59Lc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "469179683240-97kvf717mdtm45ttvdeutau1emdkgohj.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "469179683240-58r74hesi87okjme11jnu08249qund6r.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.uberbola"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:469179683240:android:2eb3a3c62c207737910d9d",
+        "android_client_info": {
+          "package_name": "com.example.uberbola"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "469179683240-rmccdc3qdnpuc5bii1vu0dknum49ejpv.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDEGcE_s0INkhFQIOGowwumELO0kdw59Lc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "469179683240-97kvf717mdtm45ttvdeutau1emdkgohj.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "469179683240-58r74hesi87okjme11jnu08249qund6r.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.uberbola"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
