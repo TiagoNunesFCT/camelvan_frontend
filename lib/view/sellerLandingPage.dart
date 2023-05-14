@@ -9,26 +9,20 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 
-//Has a signal been received at this moment? (useful for the indicator)
-bool gotSignal = false;
-//Is this the first initialization of the page?
-bool firstState = true;
-//Has the map been initialized?
-bool initializedMap = false;
-//Is this the first time geolocation data was aquired? (useful to automatically center and zoom for the first time)
-bool firstSignal = true;
+
 
 //seller coordinates
 double latitude = 0;
 double longitude = 0;
 
 
-FlutterMap leMap = FlutterMap(options: MapOptions(
+FlutterMap? leMap = FlutterMap(options: MapOptions(
   center: LatLng(38.66, -9.17),
   zoom: 13.0,
-), children: [mapService, mapMarkers],);
+), children: [mapService, mapMarkers], mapController: mapController,);
 
 
+final mapController = MapController();
 
 
 //The Open Street Maps Tile Layer
@@ -38,6 +32,18 @@ TileLayer mapService = TileLayer(
     subdomains: ['a', 'b', 'c']);
 
 MarkerLayer mapMarkers = MarkerLayer(        markers: [
+  Marker(
+    width: 80.0,
+    height: 80.0,
+    point: LatLng(latitude, longitude),
+    builder: (ctx) =>
+        Container(
+          child: IconButton(icon: Icon(Icons.man_rounded, color:Colors.blue),onPressed: () {                        Navigator.push(
+            ctx,
+            MaterialPageRoute(builder: (context) => SellerMapPage()),
+          );},),
+        ),
+  ),
   Marker(
     width: 80.0,
     height: 80.0,
@@ -62,18 +68,7 @@ MarkerLayer mapMarkers = MarkerLayer(        markers: [
           );},),
         ),
   ),
-  Marker(
-    width: 80.0,
-    height: 80.0,
-    point: LatLng(latitude, longitude),
-    builder: (ctx) =>
-        Container(
-          child: IconButton(icon: Icon(Icons.man_rounded, color:Colors.blue),onPressed: () {                        Navigator.push(
-            ctx,
-            MaterialPageRoute(builder: (context) => SellerMapPage()),
-          );},),
-        ),
-  ),
+
 ]);
 
 
@@ -94,22 +89,44 @@ class _SellerLandingPageState extends State<SellerLandingPage> {
 
 
   void redrawMap(){
-    leMap = FlutterMap(options: MapOptions(
-      center: LatLng(38.66, -9.17),
-      zoom: 13.0,
-    ), children: [mapService, mapMarkers],);
+
+    List<Marker> allMarkers = mapMarkers.markers;
+    allMarkers[0] =   Marker(
+      width: 80.0,
+      height: 80.0,
+      point: LatLng(latitude, longitude),
+      builder: (ctx) =>
+          Container(
+            child: IconButton(icon: Icon(Icons.man_rounded, color:Colors.blue),onPressed: () {                        Navigator.push(
+              ctx,
+              MaterialPageRoute(builder: (context) => SellerMapPage()),
+            );},),
+          ),
+    );
+
+
+    mapMarkers = MarkerLayer(markers:allMarkers);
+
+
+    print("redrawingMap");
+    setState(() {
+
+      leMap = FlutterMap(options: MapOptions(
+        center: LatLng(latitude, longitude),
+        zoom: 13.0,
+      ), children: [mapService, mapMarkers], mapController: mapController,);
+    });
+
   }
 
   //The State's Initialization
   @override
   void initState() {
 
-;
+
 
     //if this is the first time the page is running, initialize the map
-    if (firstState) {
-      /*initMap();*/
-    }
+
 
     //start Geolocation
     checkGps();
@@ -167,13 +184,16 @@ class _SellerLandingPageState extends State<SellerLandingPage> {
     longitude = position.longitude;
     latitude = position.latitude;
 
+
+
     setState(() {
-      //refresh UI
+
+      redrawMap();
     });
 
    const LocationSettings locationSettings = LocationSettings(
       accuracy: LocationAccuracy.high, //accuracy of the location data
-      distanceFilter: 5, //minimum distance (measured in meters) a
+      distanceFilter: 0, //minimum distance (measured in meters) a
       //device must move horizontally before an update event is generated;
     );
 
@@ -187,8 +207,11 @@ class _SellerLandingPageState extends State<SellerLandingPage> {
       longitude = position.longitude;
       latitude = position.latitude;
 
+
+
       setState(() {
         //refresh UI on update
+        redrawMap();
       });
     });
   }
@@ -211,7 +234,7 @@ class _SellerLandingPageState extends State<SellerLandingPage> {
         ),
         body: Center(
             child: Container(
-                child: Stack(children:[leMap,
+                child: Stack(children:[leMap!,
                     Text("Current Position: Lat: " + latitude.toString() + " Lon: " + longitude.toString())])
             )
         )
