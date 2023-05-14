@@ -110,10 +110,12 @@ class _SellerLandingPageState extends State<SellerLandingPage> {
       point: LatLng(latitude, longitude),
       builder: (ctx) =>
           Container(
-            child: IconButton(icon: Icon(Icons.man_rounded, color:Colors.blue),onPressed: () {                        Navigator.push(
+            child: IconButton(icon: Icon(Icons.man_rounded, color:Colors.blue),onPressed: () {
+              /*Navigator.push(
               ctx,
               MaterialPageRoute(builder: (context) => SellerMapPage()),
-            );},),
+            );*/
+            print("pressed");},),
           ),
     );
 
@@ -264,10 +266,12 @@ void loadMarkers(List<List<double>> payload){
       point: LatLng(coord[0], coord[1]),
       builder: (ctx) =>
           Container(
-            child: IconButton(icon: Icon(Icons.my_location_rounded, color:Colors.red),onPressed: () {                        Navigator.push(
+            child: IconButton(icon: Icon(Icons.my_location_rounded, color:Colors.red),onPressed: () {
+              /*Navigator.push(
               ctx,
               MaterialPageRoute(builder: (context) => SellerMapPage()),
-            );},),
+            );*/
+            print("pressed");},),
           ),
     );
     print("Marker Created");
