@@ -1,6 +1,9 @@
+
 import 'package:camelvan_frontend/view/buyerLandingPage.dart';
 import 'package:camelvan_frontend/view/loginPage.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:camelvan_frontend/view/sellerLandingPage.dart';
+import 'package:camelvan_frontend/view/sellerMapPage.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:overlay_support/overlay_support.dart';
@@ -92,7 +95,7 @@ class _MyHomePageState extends State<MyHomePage> {
     // The Flutter framework has been optimized to make rerunning build methods
     // fast, so that you can just rebuild anything that needs updating rather
     // than having to individually change instances of widgets.
-    return LoginPage(); /*Scaffold(
+      return  LoginPage(); /*Scaffold(
       appBar: AppBar(
         // TRY THIS: Try changing the color here to a specific color (to
         // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar

@@ -46,7 +46,7 @@ class _BuyerLandingPageState extends State<BuyerLandingPage> {
       body: Center(
           child: InkWell(
             onTap: () {
-              final result =  FirebaseFunctions.instance.httpsCallable('testMessage').call();
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const OrderPage()));
             },
             child: SizedBox(
               height: 250,
