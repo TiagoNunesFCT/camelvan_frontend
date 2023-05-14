@@ -250,9 +250,9 @@ class _SellerLandingPageState extends State<SellerLandingPage> {
 
 
 
-void loadMarkers(){
+void loadMarkers(List<List<double>> payload){
 
-  List<List<double>> loadedMarkerList = [];
+  List<List<double>> loadedMarkerList = payload;
   List<Marker> newMarkerList = [];
   newMarkerList.add(locationMarker);
   for (List<double> coord in loadedMarkerList){
@@ -272,6 +272,9 @@ void loadMarkers(){
   }
 
   mapMarkers = MarkerLayer(markers: newMarkerList);
+  setState(() {
+    redrawMap();
+  });
 }
 
 
