@@ -43,6 +43,8 @@ dependencies:
   flutter_map: ^4.0.0
   geolocator: ^9.0.2
   cached_network_image: ^3.2.3
+  firebase_database: ^10.2.0
+
   firebase_messaging: ^14.6.0
   overlay_support: ^2.1.0
   draggable_bottom_sheet: ^1.0.2

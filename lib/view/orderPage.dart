@@ -1,4 +1,5 @@
 import 'dart:collection';
+import 'dart:convert';
 import 'dart:ffi';
 
 import 'package:camelvan_frontend/view/waitingPage.dart';
@@ -25,6 +26,7 @@ class _OrderPageState extends State<OrderPage> {
   callBack() {
     setState(() {
       items;
+      order;
     });
   }
 
@@ -54,7 +56,10 @@ class _OrderPageState extends State<OrderPage> {
 
   int getFinalPrice() {
     int finalPrice = 0;
-    order.forEach((key, value) {finalPrice += (value as int) * (prices[key] as int);});
+    order.forEach((key, value) {
+      print('value:' + value.toString() + ' price:' + prices[key].toString());
+      finalPrice += (value as int) * (prices[key] as int);
+    });
     return finalPrice;
   }
 
@@ -76,6 +81,7 @@ class _OrderPageState extends State<OrderPage> {
                           var currentItem = list[i];
                           order.putIfAbsent(currentItem['name'], () => 0);
                           prices.putIfAbsent(currentItem['name'], () => (currentItem['price'] as int) );
+                          print(prices[currentItem['name']]);
                         }
                         print(snapshot.data!.data['products'].toString());
                         return ListView.builder(
@@ -160,17 +166,21 @@ class _OrderPageState extends State<OrderPage> {
                     },
                   ),
             ),
+            const Text('Your order: ',
+                style: TextStyle(fontSize: 25)),
             Expanded(
               child: ListView.builder(
                 padding: const EdgeInsets.all(8),
                 itemCount: order.length,
                 itemBuilder: (BuildContext context, int index) {
                   MapEntry<dynamic, dynamic> orderItem = order.entries.elementAt(index);
-                  return Text('${orderItem.key} x ${orderItem.value}');
+                    return Text('${orderItem.key} x ${orderItem.value}',
+                    style: const TextStyle(fontSize: 25));
+
                },
               ),
             ),
-            Text('Total: ${counterPrice/100}€'),
+            Text('Total: ${getFinalPrice()/100}€'),
               Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: TextButton(
@@ -181,9 +191,10 @@ class _OrderPageState extends State<OrderPage> {
                   textStyle: const TextStyle(fontSize: 20),
                   ),
                   onPressed: () {
-                    order.forEach((key, value) { if(value != 0) {
+                    List<String> orderIds = [];
+                    order.forEach((key, value) async { if(value != 0) {
                       try{
-                      FirebaseFunctions.instance.httpsCallable('broadcastRequest').call(
+                      final result = await FirebaseFunctions.instance.httpsCallable('broadcastRequest').call(
                           {
                             "coordinates": [0,0],
                             "request": {
@@ -191,8 +202,9 @@ class _OrderPageState extends State<OrderPage> {
                               "quantity": value
                             }
                           });
-                      Navigator.pop(context);
-                      Navigator.push(context, MaterialPageRoute(builder: (context) => const WaitingPage()));
+                      String _response = result.data['orderId'] as String;
+                      print('ORDERID:' + _response);
+                      orderIds.add(_response);
 
                       } on FirebaseFunctionsException catch (error) {
                         print(error.code);
@@ -200,7 +212,11 @@ class _OrderPageState extends State<OrderPage> {
                         print(error.message);
                       }
                     }
-
+                    Navigator.pop(context);
+                    Navigator.push(context, MaterialPageRoute(builder: (context) =>  WaitingPage(),
+                      settings: RouteSettings(
+                        arguments: orderIds,
+                      ),));
                     });
                   },
                   child: const Text('Order')),
