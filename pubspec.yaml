@@ -44,6 +44,7 @@ dependencies:
   flutter_map: ^4.0.0
   geolocator: ^9.0.2
   cached_network_image: ^3.2.3
+  firebase_database: ^10.2.0
 
 
 dev_dependencies:
