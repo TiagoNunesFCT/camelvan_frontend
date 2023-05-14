@@ -41,6 +41,10 @@ dependencies:
   cloud_functions: ^4.3.0
   drop_shadow: ^0.0.1+4
   counter_button: ^1.0.1
+  flutter_map: ^4.0.0
+  geolocator: ^9.0.2
+  cached_network_image: ^3.2.3
+
 
 dev_dependencies:
   flutter_test:
