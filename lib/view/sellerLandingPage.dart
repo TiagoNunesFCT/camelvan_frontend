@@ -3,6 +3,11 @@ import 'dart:async';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:camelvan_frontend/view/buyerLandingPage.dart';
 import 'package:camelvan_frontend/view/sellerMapPage.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
+import 'package:counter_button/counter_button.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -15,6 +20,9 @@ import 'package:latlong2/latlong.dart';
 double latitude = 0;
 double longitude = 0;
 
+
+//marker list (for dynamic map marker loading)
+List<Marker> loadedMarkers = [];
 
 FlutterMap? leMap = FlutterMap(options: MapOptions(
   center: LatLng(38.66, -9.17),
@@ -30,19 +38,22 @@ TileLayer mapService = TileLayer(
     tileProvider: CachedTileProvider(),
     subdomains: ['a', 'b', 'c']);
 
+//Location Marker. Defined here so it can be re-used often
+Marker locationMarker= Marker(
+  width: 80.0,
+  height: 80.0,
+  point: LatLng(latitude, longitude),
+  builder: (ctx) =>
+      Container(
+        child: IconButton(icon: Icon(Icons.man_rounded, color:Colors.blue),onPressed: () {                        Navigator.push(
+          ctx,
+          MaterialPageRoute(builder: (context) => SellerMapPage()),
+        );},),
+      ),
+);
+
 MarkerLayer mapMarkers = MarkerLayer(
-    Marker(
-      width: 80.0,
-      height: 80.0,
-      point: LatLng(latitude, longitude),
-      builder: (ctx) =>
-          Container(
-            child: IconButton(icon: Icon(Icons.man_rounded, color:Colors.blue),onPressed: () {                        Navigator.push(
-              ctx,
-              MaterialPageRoute(builder: (context) => SellerMapPage()),
-            );},),
-          ),
-    ),markers: [
+markers: [    locationMarker,
   Marker(
     width: 80.0,
     height: 80.0,
@@ -85,6 +96,9 @@ class _SellerLandingPageState extends State<SellerLandingPage> {
   late LocationPermission permission;
   late Position position;
   late StreamSubscription<Position> positionStream;
+  late Future<dynamic> productList;
+  List<int> quantityList = [];
+  FirebaseFirestore db = FirebaseFirestore.instance;
 
 
   void redrawMap(){
@@ -126,9 +140,7 @@ class _SellerLandingPageState extends State<SellerLandingPage> {
 
 
     //if this is the first time the page is running, initialize the map
-    if (firstState) {
-      /*initMap();*/
-    }
+
 
     //start Geolocation
     checkGps();
@@ -238,7 +250,29 @@ class _SellerLandingPageState extends State<SellerLandingPage> {
 
 
 
+void loadMarkers(){
 
+  List<List<double>> loadedMarkerList = [];
+  List<Marker> newMarkerList = [];
+  newMarkerList.add(locationMarker);
+  for (List<double> coord in loadedMarkerList){
+    Marker toAdd = Marker(
+      width: 80.0,
+      height: 80.0,
+      point: LatLng(coord[0], coord[1]),
+      builder: (ctx) =>
+          Container(
+            child: IconButton(icon: Icon(Icons.my_location_rounded, color:Colors.red),onPressed: () {                        Navigator.push(
+              ctx,
+              MaterialPageRoute(builder: (context) => SellerMapPage()),
+            );},),
+          ),
+    );
+    newMarkerList.add(toAdd);
+  }
+
+  mapMarkers = MarkerLayer(markers: newMarkerList);
+}
 
 
 
@@ -249,10 +283,10 @@ class _SellerLandingPageState extends State<SellerLandingPage> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          title: const Text('DraggableScrollableSheet'),
+          title: const Text('HomePage'),
         ),
         //future builder for DraggableScrollableSheet
-        body: FutureBuilder<dynamic>(
+        body: Stack(children:[leMap!,FutureBuilder<dynamic>(
           future: productList,
           builder: (context, snapshot) {
             if (snapshot.hasData) {
@@ -267,11 +301,14 @@ class _SellerLandingPageState extends State<SellerLandingPage> {
                   builder: (BuildContext context,
                       ScrollController scrollController) {
                     return Container(
+                      color: Colors.white,
                       child: ListView.builder(
                         controller: scrollController,
                         itemCount: list.length,
                         itemBuilder: (BuildContext context, int index) {
-                          return ListTile(
+                          return Material(color:(index % 2 == 0) ? const Color(0xFFf4d6b1) : const Color(0xFFecc18d), child:ListTile(
+
+                              tileColor: (index % 2 == 0) ? const Color(0xFFf4d6b1) : const Color(0xFFecc18d),
                               title: Text(list[index]['name']),
                               subtitle: Text(
                                   '${list[index]['price'] / 100}€ - ${list[index]['minDistance']}m'),
@@ -299,7 +336,7 @@ class _SellerLandingPageState extends State<SellerLandingPage> {
                                   });
                                 },
                                 count: quantityList[index],
-                              ));
+                              )));
                         },
                       ),
                     );
@@ -310,7 +347,7 @@ class _SellerLandingPageState extends State<SellerLandingPage> {
               );
             }
           },
-        ));
+        )]));
 
     // body: SizedBox.expand(child: DraggableScrollableSheet(
     //   builder: (BuildContext context, ScrollController scrollController) {
