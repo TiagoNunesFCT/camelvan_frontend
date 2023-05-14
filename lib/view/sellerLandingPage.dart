@@ -54,7 +54,40 @@ Marker locationMarker= Marker(
 );
 
 MarkerLayer mapMarkers = MarkerLayer(
-markers: [    locationMarker]);
+markers: [    locationMarker, Marker(
+  width: 80.0,
+  height: 80.0,
+  point: LatLng(38.632154180709875,  -9.23013084934219),
+  builder: (ctx) =>
+      Container(
+        child: IconButton(icon: Icon(Icons.navigation_rounded, color:Colors.blue),onPressed: () {                        Navigator.push(
+          ctx,
+          MaterialPageRoute(builder: (context) => SellerMapPage()),
+        );},),
+      ),
+), Marker(
+  width: 80.0,
+  height: 80.0,
+  point: LatLng(38.63091578859596,  -9.228979344505069),
+  builder: (ctx) =>
+      Container(
+        child: IconButton(icon: Icon(Icons.pin_drop_rounded, color:Colors.red),onPressed: () {                        Navigator.push(
+          ctx,
+          MaterialPageRoute(builder: (context) => SellerMapPage()),
+        );},),
+      ),
+), Marker(
+  width: 80.0,
+  height: 80.0,
+  point: LatLng(38.63223596761142,  -9.23059446294993),
+  builder: (ctx) =>
+      Container(
+        child: IconButton(icon: Icon(Icons.pin_drop_rounded, color:Colors.red),onPressed: () {                        Navigator.push(
+          ctx,
+          MaterialPageRoute(builder: (context) => SellerMapPage()),
+        );},),
+      ),
+)]);
 
 
 class SellerLandingPage extends StatefulWidget {
