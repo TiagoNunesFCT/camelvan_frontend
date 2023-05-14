@@ -24,83 +24,16 @@ class LoginPage extends StatefulWidget {
   State<LoginPage> createState() => _LoginPageState();
 }
 
-class PushNotification {
-  PushNotification({
-    this.title,
-    this.body,
-  });
-
-  String? title;
-  String? body;
-}
-
-class NotificationBadge extends StatelessWidget {
-  const NotificationBadge();
-
-  void showMapDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) => AddMapDialog(0, 0),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-        width: 40.0,
-        height: 40.0,
-        child: Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
-          ElevatedButton(
-            onPressed: () {
-              showMapDialog(context);
-            },
-            child: Text('View'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              OverlaySupportEntry.of(context)!.dismiss();
-            },
-            child: Text('Dismiss'),
-          )
-        ]));
-  }
-}
 
 class _LoginPageState extends State<LoginPage> {
-  PushNotification? _notificationInfo;
+
 
   @override
   void initState() {
     super.initState();
-    registerNotification();
   }
 
-  void registerNotification() async {
-    // For handling the received notifications
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      // Parse the message received
-      PushNotification notification = PushNotification(
-        title: message.notification?.title,
-        body: message.notification?.body,
-      );
 
-      setState(() {
-        _notificationInfo = notification;
-      });
-    });
-
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      // ...
-      if (_notificationInfo != null) {
-        // For displaying the notification as an overlay
-        showSimpleNotification(
-          Text(_notificationInfo!.title!),
-          subtitle: NotificationBadge(),
-          duration: Duration(seconds: 10),
-        );
-      }
-    });
-  }
 
   final _formKey = GlobalKey<FormState>();
   TextEditingController emailController = TextEditingController();
