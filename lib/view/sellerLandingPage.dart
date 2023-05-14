@@ -13,6 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:overlay_support/overlay_support.dart';
 
 
 
@@ -53,33 +54,7 @@ Marker locationMarker= Marker(
 );
 
 MarkerLayer mapMarkers = MarkerLayer(
-markers: [    locationMarker,
-  Marker(
-    width: 80.0,
-    height: 80.0,
-    point: LatLng(38.657, -9.15),
-    builder: (ctx) =>
-        Container(
-          child: IconButton(icon: Icon(Icons.my_location_rounded, color:Colors.red),onPressed: () {                        Navigator.push(
-            ctx,
-            MaterialPageRoute(builder: (context) => SellerMapPage()),
-          );},),
-        ),
-  ),
-  Marker(
-    width: 80.0,
-    height: 80.0,
-    point: LatLng(38.663, -9.215),
-    builder: (ctx) =>
-        Container(
-          child: IconButton(icon: Icon(Icons.my_location_rounded, color:Colors.red),onPressed: () {                        Navigator.push(
-            ctx,
-            MaterialPageRoute(builder: (context) => SellerMapPage()),
-          );},),
-        ),
-  ),
-
-]);
+markers: [    locationMarker]);
 
 
 class SellerLandingPage extends StatefulWidget {
@@ -89,8 +64,50 @@ class SellerLandingPage extends StatefulWidget {
   State<SellerLandingPage> createState() => _SellerLandingPageState();
 }
 
+
+class PushNotification {
+  PushNotification({
+    this.title,
+    this.body,
+  });
+
+  String? title;
+  String? body;
+}
+
+class NotificationBadge extends StatelessWidget {
+
+  final Function()? accepted;
+
+  const NotificationBadge({this.accepted});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+        width: 40.0,
+        height: 40.0,
+        child: Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
+          ElevatedButton(
+            onPressed: () {
+            print(accepted);
+              accepted!();
+              OverlaySupportEntry.of(context)!.dismiss();
+            },
+            child: Text('Accept'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              OverlaySupportEntry.of(context)!.dismiss();
+            },
+            child: Text('Dismiss'),
+          )
+        ]));
+  }
+}
+
 class _SellerLandingPageState extends State<SellerLandingPage> {
 
+  PushNotification? _notificationInfo;
   bool serviceStatus = false;
   bool hasPermission = false;
   late LocationPermission permission;
@@ -110,10 +127,12 @@ class _SellerLandingPageState extends State<SellerLandingPage> {
       point: LatLng(latitude, longitude),
       builder: (ctx) =>
           Container(
-            child: IconButton(icon: Icon(Icons.man_rounded, color:Colors.blue),onPressed: () {                        Navigator.push(
+            child: IconButton(icon: Icon(Icons.navigation_rounded, color:Colors.blue),onPressed: () {
+              /*Navigator.push(
               ctx,
               MaterialPageRoute(builder: (context) => SellerMapPage()),
-            );},),
+            );*/
+            print("pressed");},),
           ),
     );
 
@@ -132,12 +151,52 @@ class _SellerLandingPageState extends State<SellerLandingPage> {
 
   }
 
+
+  void registerNotification() async {
+    // For handling the received notifications
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+
+      print("AAAAAAAAAAAAAAAAA");
+      print(message.data);
+
+
+
+
+      // Parse the message received
+      PushNotification notification = PushNotification(
+        title: message.notification?.title,
+        body: message.notification?.body,
+      );
+
+      setState(() {
+        _notificationInfo = notification;
+      });
+    });
+
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      // ...
+      
+      
+      
+      if (_notificationInfo != null) {
+        // For displaying the notification as an overlay
+        showSimpleNotification(
+          Text(_notificationInfo!.title!),
+          subtitle: NotificationBadge(accepted: () {
+            loadMarkers(message.data["route"]);
+          }),
+          duration: Duration(seconds: 10),
+        );
+      }
+    });
+  }
+
   //The State's Initialization
   @override
   void initState() {
     super.initState();
     productList = getProducts();
-
+    registerNotification();
 
     //if this is the first time the page is running, initialize the map
 
@@ -264,10 +323,12 @@ void loadMarkers(List<List<double>> payload){
       point: LatLng(coord[0], coord[1]),
       builder: (ctx) =>
           Container(
-            child: IconButton(icon: Icon(Icons.my_location_rounded, color:Colors.red),onPressed: () {                        Navigator.push(
+            child: IconButton(icon: Icon(Icons.my_location_rounded, color:Colors.red),onPressed: () {
+              /*Navigator.push(
               ctx,
               MaterialPageRoute(builder: (context) => SellerMapPage()),
-            );},),
+            );*/
+            print("pressed");},),
           ),
     );
     print("Marker Created");
