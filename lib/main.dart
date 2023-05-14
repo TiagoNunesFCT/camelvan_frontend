@@ -1,18 +1,24 @@
 
 import 'package:camelvan_frontend/view/buyerLandingPage.dart';
 import 'package:camelvan_frontend/view/loginPage.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:camelvan_frontend/view/sellerLandingPage.dart';
 import 'package:camelvan_frontend/view/sellerMapPage.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:overlay_support/overlay_support.dart';
 import 'firebase_options.dart';
 
-void main() async{
+void main() async {
   runApp(const MyApp());
 
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
+  // FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+  //   print(message.data.toString());
+  // });
 }
 
 class MyApp extends StatelessWidget {
@@ -21,28 +27,30 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a blue toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFFC19A6B)),
-        useMaterial3: true,
+    return OverlaySupport(
+      child: MaterialApp(
+        title: 'Flutter Demo',
+        theme: ThemeData(
+          // This is the theme of your application.
+          //
+          // TRY THIS: Try running your application with "flutter run". You'll see
+          // the application has a blue toolbar. Then, without quitting the app,
+          // try changing the seedColor in the colorScheme below to Colors.green
+          // and then invoke "hot reload" (save your changes or press the "hot
+          // reload" button in a Flutter-supported IDE, or press "r" if you used
+          // the command line to start the app).
+          //
+          // Notice that the counter didn't reset back to zero; the application
+          // state is not lost during the reload. To reset the state, use hot
+          // restart instead.
+          //
+          // This works for code too, not just values: Most code changes can be
+          // tested with just a hot reload.
+          colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFFC19A6B)),
+          useMaterial3: true,
+        ),
+        home: const MyHomePage(title: 'CamelVan'),
       ),
-      home: const MyHomePage(title: 'CamelVan'),
     );
   }
 }
@@ -87,7 +95,7 @@ class _MyHomePageState extends State<MyHomePage> {
     // The Flutter framework has been optimized to make rerunning build methods
     // fast, so that you can just rebuild anything that needs updating rather
     // than having to individually change instances of widgets.
-      return LoginPage(); /*Scaffold(
+      return  LoginPage(); /*Scaffold(
       appBar: AppBar(
         // TRY THIS: Try changing the color here to a specific color (to
         // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar

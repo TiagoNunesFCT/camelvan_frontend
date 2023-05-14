@@ -3,33 +3,34 @@ import 'dart:async';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:camelvan_frontend/view/buyerLandingPage.dart';
 import 'package:camelvan_frontend/view/sellerMapPage.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
+import 'package:counter_button/counter_button.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 
-//Has a signal been received at this moment? (useful for the indicator)
-bool gotSignal = false;
-//Is this the first initialization of the page?
-bool firstState = true;
-//Has the map been initialized?
-bool initializedMap = false;
-//Is this the first time geolocation data was aquired? (useful to automatically center and zoom for the first time)
-bool firstSignal = true;
+
 
 //seller coordinates
 double latitude = 0;
 double longitude = 0;
 
 
-FlutterMap leMap = FlutterMap(options: MapOptions(
+//marker list (for dynamic map marker loading)
+List<Marker> loadedMarkers = [];
+
+FlutterMap? leMap = FlutterMap(options: MapOptions(
   center: LatLng(38.66, -9.17),
   zoom: 13.0,
-), children: [mapService, mapMarkers],);
+), children: [mapService, mapMarkers], mapController: mapController,);
 
 
-
+final mapController = MapController();
 
 //The Open Street Maps Tile Layer
 TileLayer mapService = TileLayer(
@@ -37,7 +38,22 @@ TileLayer mapService = TileLayer(
     tileProvider: CachedTileProvider(),
     subdomains: ['a', 'b', 'c']);
 
-MarkerLayer mapMarkers = MarkerLayer(        markers: [
+//Location Marker. Defined here so it can be re-used often
+Marker locationMarker= Marker(
+  width: 80.0,
+  height: 80.0,
+  point: LatLng(latitude, longitude),
+  builder: (ctx) =>
+      Container(
+        child: IconButton(icon: Icon(Icons.man_rounded, color:Colors.blue),onPressed: () {                        Navigator.push(
+          ctx,
+          MaterialPageRoute(builder: (context) => SellerMapPage()),
+        );},),
+      ),
+);
+
+MarkerLayer mapMarkers = MarkerLayer(
+markers: [    locationMarker,
   Marker(
     width: 80.0,
     height: 80.0,
@@ -62,18 +78,7 @@ MarkerLayer mapMarkers = MarkerLayer(        markers: [
           );},),
         ),
   ),
-  Marker(
-    width: 80.0,
-    height: 80.0,
-    point: LatLng(latitude, longitude),
-    builder: (ctx) =>
-        Container(
-          child: IconButton(icon: Icon(Icons.man_rounded, color:Colors.blue),onPressed: () {                        Navigator.push(
-            ctx,
-            MaterialPageRoute(builder: (context) => SellerMapPage()),
-          );},),
-        ),
-  ),
+
 ]);
 
 
@@ -91,36 +96,84 @@ class _SellerLandingPageState extends State<SellerLandingPage> {
   late LocationPermission permission;
   late Position position;
   late StreamSubscription<Position> positionStream;
+  late Future<dynamic> productList;
+  List<int> quantityList = [];
+  FirebaseFirestore db = FirebaseFirestore.instance;
 
 
   void redrawMap(){
-    leMap = FlutterMap(options: MapOptions(
-      center: LatLng(38.66, -9.17),
-      zoom: 13.0,
-    ), children: [mapService, mapMarkers],);
+
+    List<Marker> allMarkers = mapMarkers.markers;
+    allMarkers[0] =   Marker(
+      width: 80.0,
+      height: 80.0,
+      point: LatLng(latitude, longitude),
+      builder: (ctx) =>
+          Container(
+            child: IconButton(icon: Icon(Icons.man_rounded, color:Colors.blue),onPressed: () {                        Navigator.push(
+              ctx,
+              MaterialPageRoute(builder: (context) => SellerMapPage()),
+            );},),
+          ),
+    );
+
+
+    mapMarkers = MarkerLayer(markers:allMarkers);
+
+
+    print("redrawingMap");
+    setState(() {
+
+      leMap = FlutterMap(options: MapOptions(
+        center: LatLng(latitude, longitude),
+        zoom: 13.0,
+      ), children: [mapService, mapMarkers], mapController: mapController,);
+    });
+
   }
 
   //The State's Initialization
   @override
   void initState() {
+    super.initState();
+    productList = getProducts();
 
-;
 
     //if this is the first time the page is running, initialize the map
-    if (firstState) {
-      /*initMap();*/
-    }
+
 
     //start Geolocation
     checkGps();
     super.initState();
 
-
-
-
-
   }
 
+  Future<dynamic> getProducts() async {
+    try {
+      FirebaseFirestore db = FirebaseFirestore.instance;
+      final docRef = db
+          .collection("users")
+          .doc(FirebaseAuth.instance.currentUser!.email)
+          .collection("products");
+      final fcmToken = await FirebaseMessaging.instance.getToken();
+      await FirebaseFunctions.instance.httpsCallable('addToken').call({
+        "token": fcmToken,
+      });
+
+      docRef.get().then((value) {
+        for (var element in value.docs) {
+          quantityList.add(element.data()['quantity']);
+        }
+      });
+
+      return docRef.get();
+    } on FirebaseFunctionsException catch (error) {
+      print(error.code);
+      print(error.details);
+      print(error.message);
+    }
+    return [];
+  }
 
 
   checkGps() async {
@@ -168,12 +221,12 @@ class _SellerLandingPageState extends State<SellerLandingPage> {
     latitude = position.latitude;
 
     setState(() {
-      //refresh UI
+      redrawMap();
     });
 
    const LocationSettings locationSettings = LocationSettings(
       accuracy: LocationAccuracy.high, //accuracy of the location data
-      distanceFilter: 5, //minimum distance (measured in meters) a
+      distanceFilter: 0, //minimum distance (measured in meters) a
       //device must move horizontally before an update event is generated;
     );
 
@@ -189,6 +242,7 @@ class _SellerLandingPageState extends State<SellerLandingPage> {
 
       setState(() {
         //refresh UI on update
+        redrawMap();
       });
     });
   }
@@ -196,7 +250,36 @@ class _SellerLandingPageState extends State<SellerLandingPage> {
 
 
 
+void loadMarkers(List<List<double>> payload){
+  print("Logging: loading markers");
+  print("Found "+payload.length.toString()+" markers.");
+  List<List<double>> loadedMarkerList = payload;
+  List<Marker> newMarkerList = [];
+  newMarkerList.add(locationMarker);
+  for (List<double> coord in loadedMarkerList){
+    print("Found Marker: Lat: " + coord[0].toString()+ " Lon: " + coord[1].toString());
+    Marker toAdd = Marker(
+      width: 80.0,
+      height: 80.0,
+      point: LatLng(coord[0], coord[1]),
+      builder: (ctx) =>
+          Container(
+            child: IconButton(icon: Icon(Icons.my_location_rounded, color:Colors.red),onPressed: () {                        Navigator.push(
+              ctx,
+              MaterialPageRoute(builder: (context) => SellerMapPage()),
+            );},),
+          ),
+    );
+    print("Marker Created");
+    newMarkerList.add(toAdd);
+    print("Marker Added to List");
+  }
 
+  mapMarkers = MarkerLayer(markers: newMarkerList);
+  setState(() {
+    redrawMap();
+  });
+}
 
 
 
@@ -207,15 +290,89 @@ class _SellerLandingPageState extends State<SellerLandingPage> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-            title: Text('')
+          title: const Text('HomePage'),
         ),
-        body: Center(
-            child: Container(
-                child: Stack(children:[leMap,
-                    Text("Current Position: Lat: " + latitude.toString() + " Lon: " + longitude.toString())])
-            )
-        )
-    );
+        //future builder for DraggableScrollableSheet
+        body: Stack(children:[leMap!,FutureBuilder<dynamic>(
+          future: productList,
+          builder: (context, snapshot) {
+            if (snapshot.hasData) {
+              print((snapshot.data!).docs);
+              List<dynamic> list =
+                  snapshot.data!.docs.map((e) => e.data()).toList();
+              print(list);
+              return DraggableScrollableSheet(
+                  initialChildSize: 0.5,
+                  minChildSize: 0.25,
+                  maxChildSize: 0.75,
+                  builder: (BuildContext context,
+                      ScrollController scrollController) {
+                    return Container(
+                      color: Colors.white,
+                      child: ListView.builder(
+                        controller: scrollController,
+                        itemCount: list.length,
+                        itemBuilder: (BuildContext context, int index) {
+                          return Material(color:(index % 2 == 0) ? const Color(0xFFf4d6b1) : const Color(0xFFecc18d), child:ListTile(
+
+                              tileColor: (index % 2 == 0) ? const Color(0xFFf4d6b1) : const Color(0xFFecc18d),
+                              title: Text(list[index]['name']),
+                              subtitle: Text(
+                                  '${list[index]['price'] / 100}€ - ${list[index]['minDistance']}m'),
+                              leading:
+                                  Image(image: AssetImage('assets/bbicon.png')),
+                              trailing: //counter button
+                                  CounterButton(
+                                key: UniqueKey(),
+                                loading: false,
+                                onChange: (int val) {
+                                  setState(() {
+                                    if (val > -1) {
+                                      quantityList[index] = val;
+
+                                      db
+                                          .collection("users")
+                                          .doc(FirebaseAuth
+                                              .instance.currentUser!.email)
+                                          .collection("products")
+                                          .doc(list[index]['dbid'])
+                                          .update({"quantity": val});
+
+                                      print(quantityList[index]);
+                                    }
+                                  });
+                                },
+                                count: quantityList[index],
+                              )));
+                        },
+                      ),
+                    );
+                  });
+            } else {
+              return const Center(
+                child: CircularProgressIndicator(),
+              );
+            }
+          },
+        )]));
+
+    // body: SizedBox.expand(child: DraggableScrollableSheet(
+    //   builder: (BuildContext context, ScrollController scrollController) {
+    //     return Container(
+    //       child: ListView.builder(
+    //         controller: scrollController,
+    //         itemCount: 25,
+    //         itemBuilder: (BuildContext context, int index) {
+    //           return ListTile(
+    //               title: Text('Item $index'),
+    //               tileColor: (index % 2 == 0)
+    //                   ? const Color(0xFFf4d6b1)
+    //                   : const Color(0xFFecc18d));
+    //         },
+    //       ),
+    //     );
+    //   },
+    // )));
   }
 }
 

@@ -145,6 +145,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.5"
+  draggable_bottom_sheet:
+    dependency: "direct main"
+    description:
+      name: draggable_bottom_sheet
+      sha256: "21470ca0ec2014778691ae1d0df7bb2530bc0c9e7b77dee3442f33b5546f2fc1"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.2"
   drop_shadow:
     dependency: "direct main"
     description:
@@ -225,30 +233,30 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.5.0"
-  firebase_database:
+  firebase_messaging:
     dependency: "direct main"
     description:
-      name: firebase_database
-      sha256: "3073063fe2886e0cdf2be1d2ae80ee13799791d1ee995599bce92e1c6889b387"
+      name: firebase_messaging
+      sha256: "0b9f9c2bcfbb4f29b4b1ce2cbce7c17c2c7693f575cc87fcb7a073241845a42c"
       url: "https://pub.dev"
     source: hosted
-    version: "10.2.0"
-  firebase_database_platform_interface:
+    version: "14.6.0"
+  firebase_messaging_platform_interface:
     dependency: transitive
     description:
-      name: firebase_database_platform_interface
-      sha256: "9167c9244ea070fcdc4c4259ff1761a5f34484df255db35a5c4d240d7630403d"
+      name: firebase_messaging_platform_interface
+      sha256: b86d6c8f665dc3fcbeae52b7ffb6f2a2dfa8544843468a6d9927b29a6ae2bd07
       url: "https://pub.dev"
     source: hosted
-    version: "0.2.5"
-  firebase_database_web:
+    version: "4.5.0"
+  firebase_messaging_web:
     dependency: transitive
     description:
-      name: firebase_database_web
-      sha256: df92c650adc89d9cfcebd83210c2dd97597dba1e0c35c5c474043e71344041ed
+      name: firebase_messaging_web
+      sha256: "4e5e7e3ea9923f4cd32da828a4bd1a5c4a092161ff90f69f14dd34c5b8e05a81"
       url: "https://pub.dev"
     source: hosted
-    version: "0.2.3"
+    version: "3.5.0"
   flutter:
     dependency: "direct main"
     description: flutter
@@ -440,6 +448,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.2"
+  overlay_support:
+    dependency: "direct main"
+    description:
+      name: overlay_support
+      sha256: fc39389bfd94e6985e1e13b2a88a125fc4027608485d2d4e2847afe1b2bb339c
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.1.0"
   path:
     dependency: transitive
     description:
