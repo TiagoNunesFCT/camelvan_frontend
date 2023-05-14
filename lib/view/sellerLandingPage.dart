@@ -24,26 +24,25 @@ FlutterMap? leMap = FlutterMap(options: MapOptions(
 
 final mapController = MapController();
 
-
 //The Open Street Maps Tile Layer
 TileLayer mapService = TileLayer(
     urlTemplate: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
     tileProvider: CachedTileProvider(),
     subdomains: ['a', 'b', 'c']);
 
-MarkerLayer mapMarkers = MarkerLayer(        markers: [
-  Marker(
-    width: 80.0,
-    height: 80.0,
-    point: LatLng(latitude, longitude),
-    builder: (ctx) =>
-        Container(
-          child: IconButton(icon: Icon(Icons.man_rounded, color:Colors.blue),onPressed: () {                        Navigator.push(
-            ctx,
-            MaterialPageRoute(builder: (context) => SellerMapPage()),
-          );},),
-        ),
-  ),
+MarkerLayer mapMarkers = MarkerLayer(
+    Marker(
+      width: 80.0,
+      height: 80.0,
+      point: LatLng(latitude, longitude),
+      builder: (ctx) =>
+          Container(
+            child: IconButton(icon: Icon(Icons.man_rounded, color:Colors.blue),onPressed: () {                        Navigator.push(
+              ctx,
+              MaterialPageRoute(builder: (context) => SellerMapPage()),
+            );},),
+          ),
+    ),markers: [
   Marker(
     width: 80.0,
     height: 80.0,
@@ -122,22 +121,47 @@ class _SellerLandingPageState extends State<SellerLandingPage> {
   //The State's Initialization
   @override
   void initState() {
-
+    super.initState();
+    productList = getProducts();
 
 
     //if this is the first time the page is running, initialize the map
-
+    if (firstState) {
+      /*initMap();*/
+    }
 
     //start Geolocation
     checkGps();
     super.initState();
 
-
-
-
-
   }
 
+  Future<dynamic> getProducts() async {
+    try {
+      FirebaseFirestore db = FirebaseFirestore.instance;
+      final docRef = db
+          .collection("users")
+          .doc(FirebaseAuth.instance.currentUser!.email)
+          .collection("products");
+      final fcmToken = await FirebaseMessaging.instance.getToken();
+      await FirebaseFunctions.instance.httpsCallable('addToken').call({
+        "token": fcmToken,
+      });
+
+      docRef.get().then((value) {
+        for (var element in value.docs) {
+          quantityList.add(element.data()['quantity']);
+        }
+      });
+
+      return docRef.get();
+    } on FirebaseFunctionsException catch (error) {
+      print(error.code);
+      print(error.details);
+      print(error.message);
+    }
+    return [];
+  }
 
 
   checkGps() async {
@@ -184,10 +208,7 @@ class _SellerLandingPageState extends State<SellerLandingPage> {
     longitude = position.longitude;
     latitude = position.latitude;
 
-
-
     setState(() {
-
       redrawMap();
     });
 
@@ -206,8 +227,6 @@ class _SellerLandingPageState extends State<SellerLandingPage> {
 
       longitude = position.longitude;
       latitude = position.latitude;
-
-
 
       setState(() {
         //refresh UI on update
@@ -230,15 +249,86 @@ class _SellerLandingPageState extends State<SellerLandingPage> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-            title: Text('')
+          title: const Text('DraggableScrollableSheet'),
         ),
-        body: Center(
-            child: Container(
-                child: Stack(children:[leMap!,
-                    Text("Current Position: Lat: " + latitude.toString() + " Lon: " + longitude.toString())])
-            )
-        )
-    );
+        //future builder for DraggableScrollableSheet
+        body: FutureBuilder<dynamic>(
+          future: productList,
+          builder: (context, snapshot) {
+            if (snapshot.hasData) {
+              print((snapshot.data!).docs);
+              List<dynamic> list =
+                  snapshot.data!.docs.map((e) => e.data()).toList();
+              print(list);
+              return DraggableScrollableSheet(
+                  initialChildSize: 0.5,
+                  minChildSize: 0.25,
+                  maxChildSize: 0.75,
+                  builder: (BuildContext context,
+                      ScrollController scrollController) {
+                    return Container(
+                      child: ListView.builder(
+                        controller: scrollController,
+                        itemCount: list.length,
+                        itemBuilder: (BuildContext context, int index) {
+                          return ListTile(
+                              title: Text(list[index]['name']),
+                              subtitle: Text(
+                                  '${list[index]['price'] / 100}€ - ${list[index]['minDistance']}m'),
+                              leading:
+                                  Image(image: AssetImage('assets/bbicon.png')),
+                              trailing: //counter button
+                                  CounterButton(
+                                key: UniqueKey(),
+                                loading: false,
+                                onChange: (int val) {
+                                  setState(() {
+                                    if (val > -1) {
+                                      quantityList[index] = val;
+
+                                      db
+                                          .collection("users")
+                                          .doc(FirebaseAuth
+                                              .instance.currentUser!.email)
+                                          .collection("products")
+                                          .doc(list[index]['dbid'])
+                                          .update({"quantity": val});
+
+                                      print(quantityList[index]);
+                                    }
+                                  });
+                                },
+                                count: quantityList[index],
+                              ));
+                        },
+                      ),
+                    );
+                  });
+            } else {
+              return const Center(
+                child: CircularProgressIndicator(),
+              );
+            }
+          },
+        ));
+
+    // body: SizedBox.expand(child: DraggableScrollableSheet(
+    //   builder: (BuildContext context, ScrollController scrollController) {
+    //     return Container(
+    //       child: ListView.builder(
+    //         controller: scrollController,
+    //         itemCount: 25,
+    //         itemBuilder: (BuildContext context, int index) {
+    //           return ListTile(
+    //               title: Text('Item $index'),
+    //               tileColor: (index % 2 == 0)
+    //                   ? const Color(0xFFf4d6b1)
+    //                   : const Color(0xFFecc18d));
+    //         },
+    //       ),
+    //     );
+    //   },
+    // )));
   }
 }
 

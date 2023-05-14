@@ -1,5 +1,8 @@
+import 'dart:collection';
 import 'dart:ffi';
 
+import 'package:camelvan_frontend/view/waitingPage.dart';
+import 'package:counter_button/counter_button.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_functions/cloud_functions.dart';
@@ -13,11 +16,24 @@ class OrderPage extends StatefulWidget {
 
 class _OrderPageState extends State<OrderPage> {
   late Future<dynamic> productList;
+  int counterValue = 0;
+  int counterPrice = 0;
+  List<String> items = [];
+  HashMap order = new HashMap<String, int>();
+  HashMap prices = new HashMap<String, int>();
+
+  callBack() {
+    setState(() {
+      items;
+    });
+  }
 
   @override
   void initState() {
     super.initState();
     productList = getProducts();
+    counterValue = 0;
+    counterPrice = 0;
   }
 
   Future<dynamic> getProducts()  async {
@@ -36,43 +52,161 @@ class _OrderPageState extends State<OrderPage> {
     return [];
   }
 
+  int getFinalPrice() {
+    int finalPrice = 0;
+    order.forEach((key, value) {finalPrice += (value as int) * (prices[key] as int);});
+    return finalPrice;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final List<String> items = List<String>.generate(10000, (i) => 'Item $i');
     return Scaffold(
         appBar: AppBar(
             title: Text("Order")
         ),
-        body: FutureBuilder<dynamic>(
-          future: productList,
-          builder: (context, snapshot) {
-            if(snapshot.hasData){
-              dynamic list = snapshot.data!.data['products'];
-              print(snapshot.data!.data['products'].toString());
-              return ListView.builder(
-                  itemCount: list.length,
-                  prototypeItem: Card(
-                    child: ListTile(
-                      title: Text(list.first['name']),
-                      subtitle: Text('${list.first['price']/100}% - ${list.first['minDistance']}m'),
-                      leading: Image(image: AssetImage('assets/bbicon.png')),
-                    ),
+        body: Column(
+          children: [
+            Expanded(
+              child: FutureBuilder<dynamic>(
+                    future: productList,
+                    builder: (context, snapshot) {
+                      if(snapshot.hasData){
+                        dynamic list = snapshot.data!.data['products'];
+                        for(var i = 0; i < list.length; i++){
+                          var currentItem = list[i];
+                          order.putIfAbsent(currentItem['name'], () => 0);
+                          prices.putIfAbsent(currentItem['name'], () => (currentItem['price'] as int) );
+                        }
+                        print(snapshot.data!.data['products'].toString());
+                        return ListView.builder(
+                            itemCount: list.length,
+                            prototypeItem: Card(
+                              child: ListTile(
+                                title: Text(list.first['name']),
+                                subtitle: Text('${list.first['price']/100}€ - ${list.first['minDistance']}m'),
+                                leading: Image(image: AssetImage('assets/bbicon.png')),
+                              ),
+                            ),
+                            itemBuilder: (context, index) {
+                              return Card(
+                                child: ListTile(
+                                    onTap: () {
+                                      showDialog(
+                                        context: context,
+                                        builder: (context) {
+                                          return StatefulBuilder(
+                                            builder: (context, setState) {
+                                              return Dialog.fullscreen(
+                                                child: Column(
+                                                  mainAxisSize: MainAxisSize.min,
+                                                  mainAxisAlignment: MainAxisAlignment.center,
+                                                  children: <Widget>[
+                                                    Text(list[index]['name']),
+                                                    const SizedBox(height: 15),
+                                                    SizedBox(
+                                                        height: 100,
+                                                        width: 50,
+                                                        child: Image.asset('assets/bbicon.png', fit: BoxFit.scaleDown)
+                                                    ),
+                                                    const SizedBox(height: 15),
+                                                    CounterButton(
+                                                      loading: false,
+                                                      onChange: (int val) {
+                                                        setState(() {
+                                                          if(val > -1) {
+                                                            order[list[index]['name']] = val;
+                                                            counterValue = val;
+                                                          }
+                                                        });
+                                                      },
+                                                      count: order[list[index]['name']],
+                                                      countColor: Colors.purple,
+                                                      buttonColor: Colors.purpleAccent,
+                                                      progressColor: Colors.purpleAccent,
+                                                    ),
+                                                    TextButton(
+                                                      onPressed: () {
+                                                        Navigator.pop(context);
+                                                        if(counterValue >= 0) {
+                                                          //order[list[index]['name']] = counterValue;
+                                                          items.add(list[index]['name'] + ' x ' + counterValue.toString());
+                                                          //counterPrice = counterPrice + counterValue * (list[index]['price'] as int) ;
+                                                          print('PRICE:' + counterPrice.toString());
+                                                        }
+                                                        counterValue = 0;
+                                                        callBack();
+                                                        },
+                                                      child: const Text('Save'),
+                                                    ),
+                                                  ],
+                                                ),
+                                              );
+                                            },
+                                          );
+                                        },
+                                      );
+                                    },
+                                    title: Text(list[index]['name']),
+                                    subtitle: Text('${list[index]['price']/100}€ - ${list[index]['minDistance']}m'),
+                                    leading: Image(image: AssetImage('assets/bbicon.png'))
+                                ),
+                              );
+                            }
+                        );
+                      }
+                      else {
+                        return const CircularProgressIndicator();
+                      }
+                    },
                   ),
-                  itemBuilder: (context, index) {
-                    return ListTile(
-                        title: Text(list[index]['name']),
-                        subtitle: Text('${list[index]['price']/100}% - ${list[index]['minDistance']}m'),
-                        leading: Image(image: AssetImage('assets/bbicon.png'))
-                    );
-                  }
-              );
-            }
-            else {
-              return const CircularProgressIndicator();
-            }
-            return Text("Fail");
-          },
-        )
+            ),
+            Expanded(
+              child: ListView.builder(
+                padding: const EdgeInsets.all(8),
+                itemCount: order.length,
+                itemBuilder: (BuildContext context, int index) {
+                  MapEntry<dynamic, dynamic> orderItem = order.entries.elementAt(index);
+                  return Text('${orderItem.key} x ${orderItem.value}');
+               },
+              ),
+            ),
+            Text('Total: ${counterPrice/100}€'),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: TextButton(
+                  style: TextButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  backgroundColor: Colors.orangeAccent,
+                  padding: const EdgeInsets.all(16.0),
+                  textStyle: const TextStyle(fontSize: 20),
+                  ),
+                  onPressed: () {
+                    order.forEach((key, value) { if(value != 0) {
+                      try{
+                      FirebaseFunctions.instance.httpsCallable('broadcastRequest').call(
+                          {
+                            "coordinates": [0,0],
+                            "request": {
+                              "name": key,
+                              "quantity": value
+                            }
+                          });
+                      Navigator.pop(context);
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => const WaitingPage()));
+
+                      } on FirebaseFunctionsException catch (error) {
+                        print(error.code);
+                        print(error.details);
+                        print(error.message);
+                      }
+                    }
+
+                    });
+                  },
+                  child: const Text('Order')),
+              ),
+          ],
+        ),
     );
   }
 }
