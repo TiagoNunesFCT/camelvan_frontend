@@ -251,11 +251,13 @@ class _SellerLandingPageState extends State<SellerLandingPage> {
 
 
 void loadMarkers(List<List<double>> payload){
-
+  print("Logging: loading markers");
+  print("Found "+payload.length.toString()+" markers.");
   List<List<double>> loadedMarkerList = payload;
   List<Marker> newMarkerList = [];
   newMarkerList.add(locationMarker);
   for (List<double> coord in loadedMarkerList){
+    print("Found Marker: Lat: " + coord[0].toString()+ " Lon: " + coord[1].toString());
     Marker toAdd = Marker(
       width: 80.0,
       height: 80.0,
@@ -268,7 +270,9 @@ void loadMarkers(List<List<double>> payload){
             );},),
           ),
     );
+    print("Marker Created");
     newMarkerList.add(toAdd);
+    print("Marker Added to List");
   }
 
   mapMarkers = MarkerLayer(markers: newMarkerList);
