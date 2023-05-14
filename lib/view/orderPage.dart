@@ -174,54 +174,20 @@ class _OrderPageState extends State<OrderPage> {
                 itemCount: order.length,
                 itemBuilder: (BuildContext context, int index) {
                   MapEntry<dynamic, dynamic> orderItem = order.entries.elementAt(index);
-                    return Text('${orderItem.key} x ${orderItem.value}',
-                    style: const TextStyle(fontSize: 25));
+                    return Card(
+                      child: Text('${orderItem.key} x ${orderItem.value}',
+                      style: const TextStyle(fontSize: 25)),
+                    );
 
                },
               ),
             ),
-            Text('Total: ${getFinalPrice()/100}€'),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: TextButton(
-                  style: TextButton.styleFrom(
-                  foregroundColor: Colors.white,
-                  backgroundColor: Colors.orangeAccent,
-                  padding: const EdgeInsets.all(16.0),
-                  textStyle: const TextStyle(fontSize: 20),
-                  ),
-                  onPressed: () {
-                    List<String> orderIds = [];
-                    order.forEach((key, value) async { if(value != 0) {
-                      try{
-                      final result = await FirebaseFunctions.instance.httpsCallable('broadcastRequest').call(
-                          {
-                            "coordinates": [0,0],
-                            "request": {
-                              "name": key,
-                              "quantity": value
-                            }
-                          });
-                      String _response = result.data['orderId'] as String;
-                      print('ORDERID:' + _response);
-                      orderIds.add(_response);
-
-                      } on FirebaseFunctionsException catch (error) {
-                        print(error.code);
-                        print(error.details);
-                        print(error.message);
-                      }
-                    }
-                    Navigator.pop(context);
-                    Navigator.push(context, MaterialPageRoute(builder: (context) =>  WaitingPage(),
-                      settings: RouteSettings(
-                        arguments: orderIds,
-                      ),));
-                    });
-                  },
-                  child: const Text('Order')),
+            Padding(
+              padding: const EdgeInsets.all(5.0),
+              child: Text('Total: ${getFinalPrice()/100}€',
+                  style: const TextStyle(fontSize: 25)
               ),
-          ],
+            )],
         ),
     );
   }

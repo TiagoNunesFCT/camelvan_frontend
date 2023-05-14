@@ -37,13 +37,6 @@ class PushNotification {
 class NotificationBadge extends StatelessWidget {
   const NotificationBadge();
 
-  void showMapDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) => AddMapDialog(0, 0),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -52,7 +45,7 @@ class NotificationBadge extends StatelessWidget {
         child: Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
           ElevatedButton(
             onPressed: () {
-              showMapDialog(context);
+
             },
             child: Text('View'),
           ),
@@ -90,6 +83,9 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+
+      print("AAAAAAAAAAAAAAAAAAAAA");
+      print(message.data);
       // ...
       if (_notificationInfo != null) {
         // For displaying the notification as an overlay
@@ -235,58 +231,5 @@ class _LoginPageState extends State<LoginPage> {
         ),
       ),
     );
-  }
-}
-
-class AddMapDialog extends StatefulWidget {
-  double lat = 0;
-  double long = 0;
-
-  AddMapDialog(double lat, double long) {
-    this.lat = lat;
-    this.long = long;
-  }
-
-  _AddRatingDialogState createState() => new _AddRatingDialogState();
-}
-
-class CachedTileProvider extends TileProvider {
-  CachedTileProvider();
-
-  @override
-  ImageProvider getImage(TileCoordinates coords, TileLayer tileLayer) {
-    return CachedNetworkImageProvider(
-      getTileUrl(coords, tileLayer),
-      //Now you can set options that determine how the image gets cached via whichever plugin you use.
-    );
-  }
-}
-
-class _AddRatingDialogState extends State<AddMapDialog> {
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-        child: SingleChildScrollView(
-            child: AlertDialog(
-      title: Text("New Route"),
-      content: Container(
-          child: Image.asset('assets/bbicon.png', fit: BoxFit.scaleDown)
-      ),
-      actions: <Widget>[
-        Row(
-            mainAxisSize: MainAxisSize.max,
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              TextButton(
-                onPressed: () {},
-                child: Text('ok'),
-              ),
-              TextButton(
-                onPressed: () {},
-                child: Text('cancel'),
-              ),
-            ])
-      ],
-    )));
   }
 }
