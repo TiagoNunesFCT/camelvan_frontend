@@ -38,7 +38,6 @@ class _OrderPageState extends State<OrderPage> {
 
   @override
   Widget build(BuildContext context) {
-    final List<String> items = List<String>.generate(10000, (i) => 'Item $i');
     return Scaffold(
         appBar: AppBar(
             title: Text("Order")
@@ -48,7 +47,6 @@ class _OrderPageState extends State<OrderPage> {
           builder: (context, snapshot) {
             if(snapshot.hasData){
               dynamic list = snapshot.data!.data['products'];
-              print(snapshot.data!.data['products'].toString());
               return ListView.builder(
                   itemCount: list.length,
                   prototypeItem: Card(
@@ -70,7 +68,6 @@ class _OrderPageState extends State<OrderPage> {
             else {
               return const CircularProgressIndicator();
             }
-            return Text("Fail");
           },
         )
     );

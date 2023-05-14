@@ -1,12 +1,21 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:camelvan_frontend/view/registerPage.dart';
 import 'package:camelvan_frontend/view/sellerLandingPage.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/services.dart';
+import 'package:overlay_support/overlay_support.dart';
+import 'package:camelvan_frontend/view/sellerLandingPage.dart';
+import 'package:camelvan_frontend/view/sellerMapPage.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 
 import 'buyerLandingPage.dart';
-
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -15,7 +24,84 @@ class LoginPage extends StatefulWidget {
   State<LoginPage> createState() => _LoginPageState();
 }
 
+class PushNotification {
+  PushNotification({
+    this.title,
+    this.body,
+  });
+
+  String? title;
+  String? body;
+}
+
+class NotificationBadge extends StatelessWidget {
+  const NotificationBadge();
+
+  void showMapDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) => AddMapDialog(0, 0),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+        width: 40.0,
+        height: 40.0,
+        child: Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
+          ElevatedButton(
+            onPressed: () {
+              showMapDialog(context);
+            },
+            child: Text('View'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              OverlaySupportEntry.of(context)!.dismiss();
+            },
+            child: Text('Dismiss'),
+          )
+        ]));
+  }
+}
+
 class _LoginPageState extends State<LoginPage> {
+  PushNotification? _notificationInfo;
+
+  @override
+  void initState() {
+    super.initState();
+    registerNotification();
+  }
+
+  void registerNotification() async {
+    // For handling the received notifications
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      // Parse the message received
+      PushNotification notification = PushNotification(
+        title: message.notification?.title,
+        body: message.notification?.body,
+      );
+
+      setState(() {
+        _notificationInfo = notification;
+      });
+    });
+
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      // ...
+      if (_notificationInfo != null) {
+        // For displaying the notification as an overlay
+        showSimpleNotification(
+          Text(_notificationInfo!.title!),
+          subtitle: NotificationBadge(),
+          duration: Duration(seconds: 10),
+        );
+      }
+    });
+  }
+
   final _formKey = GlobalKey<FormState>();
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
@@ -35,7 +121,7 @@ class _LoginPageState extends State<LoginPage> {
             children: [
               Padding(
                 padding:
-                const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
                 child: TextFormField(
                   controller: emailController,
                   decoration: const InputDecoration(
@@ -50,7 +136,7 @@ class _LoginPageState extends State<LoginPage> {
               ),
               Padding(
                 padding:
-                const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
                 child: TextFormField(
                   controller: passwordController,
                   obscureText: true,
@@ -66,43 +152,52 @@ class _LoginPageState extends State<LoginPage> {
               ),
               Padding(
                 padding:
-                const EdgeInsets.symmetric(horizontal: 8, vertical: 16.0),
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 16.0),
                 child: Center(
                   child: ElevatedButton(
                     onPressed: () async {
                       if (_formKey.currentState!.validate()) {
                         // Navigate the user to the Home page
                         try {
-                          final credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
-                              email: emailController.text,
-                              password: passwordController.text
-                          );
+                          final credential = await FirebaseAuth.instance
+                              .signInWithEmailAndPassword(
+                                  email: emailController.text,
+                                  password: passwordController.text);
 
                           FirebaseFirestore db = FirebaseFirestore.instance;
 
-                          // //check if user is buyer or seller
-                          // DocumentSnapshot snapshot = await db.collection('users').doc(credential.user!.uid).get().then();
-                          // if(snapshot['type'] == 'buyer'){
-                          //   Navigator.push(context, MaterialPageRoute(builder: (context) => BuyerLandingPage()));
-                          // }else{
-                          //   Navigator.push(context, MaterialPageRoute(builder: (context) => SellerLandingPage()));
-                          // }
-
-                          final docRef = db.collection("users").doc(emailController.text);
+                          final docRef =
+                              db.collection("users").doc(emailController.text);
+                          final fcmToken =
+                              await FirebaseMessaging.instance.getToken();
+                          await FirebaseFunctions.instance
+                              .httpsCallable('addToken')
+                              .call({
+                            "token": fcmToken,
+                          });
                           docRef.get().then(
-                                (DocumentSnapshot doc) {
-                                  final data = doc.data() as Map<String, dynamic>;
-                                  if(data['type'] == 'buyer'){
-                                    Navigator.popUntil(context, ModalRoute.withName('/'));
-                                    Navigator.push(context, MaterialPageRoute(builder: (context) => BuyerLandingPage()));
-                                  } else {
-                                    Navigator.popUntil(context, ModalRoute.withName('/'));
-                                    Navigator.push(context, MaterialPageRoute(builder: (context) => SellerLandingPage()));
-                                  }
+                            (DocumentSnapshot doc) {
+                              final data = doc.data() as Map<String, dynamic>;
+                              if (data['type'] == 'buyer') {
+                                Navigator.popUntil(
+                                    context, ModalRoute.withName('/'));
+                                Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) =>
+                                            BuyerLandingPage()));
+                              } else {
+                                Navigator.popUntil(
+                                    context, ModalRoute.withName('/'));
+                                Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) =>
+                                            SellerLandingPage()));
+                              }
                             },
                             onError: (e) => print("Error getting document: $e"),
                           );
-
                         } on FirebaseAuthException catch (e) {
                           if (e.code == 'user-not-found') {
                             print('No user found for that email.');
@@ -122,11 +217,14 @@ class _LoginPageState extends State<LoginPage> {
               ),
               Padding(
                 padding:
-                const EdgeInsets.symmetric(horizontal: 8, vertical: 16.0),
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 16.0),
                 child: Center(
                   child: ElevatedButton(
                     onPressed: () {
-                      Navigator.push(context, MaterialPageRoute(builder: (context) => RegisterPage()));
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => RegisterPage()));
                     },
                     child: const Text('Register'),
                   ),
@@ -137,5 +235,58 @@ class _LoginPageState extends State<LoginPage> {
         ),
       ),
     );
+  }
+}
+
+class AddMapDialog extends StatefulWidget {
+  double lat = 0;
+  double long = 0;
+
+  AddMapDialog(double lat, double long) {
+    this.lat = lat;
+    this.long = long;
+  }
+
+  _AddRatingDialogState createState() => new _AddRatingDialogState();
+}
+
+class CachedTileProvider extends TileProvider {
+  CachedTileProvider();
+
+  @override
+  ImageProvider getImage(TileCoordinates coords, TileLayer tileLayer) {
+    return CachedNetworkImageProvider(
+      getTileUrl(coords, tileLayer),
+      //Now you can set options that determine how the image gets cached via whichever plugin you use.
+    );
+  }
+}
+
+class _AddRatingDialogState extends State<AddMapDialog> {
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+        child: SingleChildScrollView(
+            child: AlertDialog(
+      title: Text("New Route"),
+      content: Container(
+          child: Image.asset('assets/bbicon.png', fit: BoxFit.scaleDown)
+      ),
+      actions: <Widget>[
+        Row(
+            mainAxisSize: MainAxisSize.max,
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              TextButton(
+                onPressed: () {},
+                child: Text('ok'),
+              ),
+              TextButton(
+                onPressed: () {},
+                child: Text('cancel'),
+              ),
+            ])
+      ],
+    )));
   }
 }

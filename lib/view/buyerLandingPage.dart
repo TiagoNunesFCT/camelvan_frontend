@@ -1,3 +1,4 @@
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:drop_shadow/drop_shadow.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -45,7 +46,7 @@ class _BuyerLandingPageState extends State<BuyerLandingPage> {
       body: Center(
           child: InkWell(
             onTap: () {
-              Navigator.push(context, MaterialPageRoute(builder: (context) => const OrderPage()));
+              final result =  FirebaseFunctions.instance.httpsCallable('testMessage').call();
             },
             child: SizedBox(
               height: 250,

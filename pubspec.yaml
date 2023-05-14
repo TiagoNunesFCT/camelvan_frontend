@@ -40,6 +40,14 @@ dependencies:
   cloud_firestore: ^4.7.0
   cloud_functions: ^4.3.0
   drop_shadow: ^0.0.1+4
+  flutter_map: ^4.0.0
+  geolocator: ^9.0.2
+  cached_network_image: ^3.2.3
+  firebase_messaging: ^14.6.0
+  overlay_support: ^2.1.0
+  draggable_bottom_sheet: ^1.0.2
+  counter_button: ^1.0.1
+
 
 dev_dependencies:
   flutter_test:
